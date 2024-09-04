@@ -2,8 +2,7 @@
 #include "data.h"
 #include "decl.h"
 
-// Parsing of expressions with full recursive descent
-// Copyright (c) 2019 Warren Toomey, GPL3
+
 
 // Parse a primary factor and return an
 // AST node representing it.
