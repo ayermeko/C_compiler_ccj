@@ -23,8 +23,8 @@ static void usage(char *prog) {
 // Main program: check arguments and print a usage
 // if we don't have an argument. Open up the input
 // file and call scanfile() to scan the tokens in it.
-void main(int argc, char *argv[]) {
-  struct ASTnode *n;
+int main(int argc, char *argv[]) {
+  ASTnode *n;
 
   if (argc != 2)
     usage(argv[0]);
