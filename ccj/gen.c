@@ -2,6 +2,8 @@
 #include "data.h"
 #include "decl.h"
 
+// Assembly code generater.
+
 // Given an AST, generate
 // assembly code recursively
 static int genAST(ASTnode *n) {
@@ -22,4 +24,13 @@ static int genAST(ASTnode *n) {
       fprintf(stderr, "Unknown AST operator %d\n", n->op);
       exit(1);
   }
+}
+
+void generatecode(ASTnode *n) {
+  int reg;
+
+  cgpreamble();
+  reg= genAST(n);
+  cgprintint(reg);      // Print the register with the result as an int
+  cgpostamble();
 }
