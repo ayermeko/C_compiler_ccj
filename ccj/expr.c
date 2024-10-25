@@ -2,40 +2,43 @@
 #include "data.h"
 #include "decl.h"
 
-/*
-    We need a function to check that the next token is an 
-    integer literal, and to build an AST node to 
-    hold the literal value.
-*/
+// Parsing of expressions
 
+
+// Parse a primary factor and return an
+// AST node representing it.
 static ASTnode *primary(void) {
-    ASTnode *n;
+  ASTnode *n;
 
-    switch (Token.token) {
-    case T_INTLIT:
-      n = mkastleaf(A_INTLIT, Token.intvalue);
-      scan(&Token);
-      return (n);
-    default:
-      fprintf(stderr, "syntax error on line %d\n", Line);
-      exit(1);
+  // For an INTLIT token, make a leaf AST node for it
+  // and scan in the next token. Otherwise, a syntax error
+  // for any other token type.
+  switch (Token.token) {
+  case T_INTLIT:
+    n = mkastleaf(A_INTLIT, Token.intvalue);
+    scan(&Token);
+    return (n);
+  default:
+    fprintf(stderr, "syntax error on line %d, token %d\n", Line, Token.token);
+    exit(1);
   }
 }
 
-// Convert a token into an AST operation.
-int arithop(int tok) {
-  switch (tok) {
-    case T_PLUS:
-      return (A_ADD);
-    case T_MINUS:
-      return (A_SUBTRACT);
-    case T_STAR:
-      return (A_MULTIPLY);
-    case T_SLASH:
-      return (A_DIVIDE);
-    default:
-      fprintf(stderr, "unknown token in arithop() on line %d\n", Line);
-      exit(1);
+
+// Convert a binary operator token into an AST operation.
+int arithop(int tokentype) {
+  switch (tokentype) {
+  case T_PLUS:
+    return (A_ADD);
+  case T_MINUS:
+    return (A_SUBTRACT);
+  case T_STAR:
+    return (A_MULTIPLY);
+  case T_SLASH:
+    return (A_DIVIDE);
+  default:
+    fprintf(stderr, "syntax error on line %d, token %d\n", Line, tokentype);
+    exit(1);
   }
 }
 
@@ -53,7 +56,8 @@ static int op_precedence(int tokentype) {
   return (prec);
 }
 
-
+// Return an AST tree whose root is a binary operator.
+// Parameter ptp is the previous token's precedence.
 ASTnode *binexpr(int ptp) {
   ASTnode *left, *right;
   int tokentype;

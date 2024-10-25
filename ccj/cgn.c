@@ -5,7 +5,7 @@
 // List of available registers
 // and their names
 static int freereg[4];
-static char *reglist[4]= { "%r8", "%r9", "%r10", "%r11" };
+static char *reglist[4]= { "r8", "r9", "r10", "r11" };
 
 // Set all registers as available
 void freeall_registers(void)
@@ -43,28 +43,27 @@ void cgpreamble()
 {
   freeall_registers();
   fputs(
-	"\t.text\n"
-	".LC0:\n"
-	"\t.string\t\"%d\\n\"\n"
+	"\tglobal\tmain\n"
+	"\textern\tprintf\n"
+	"\tsection\t.text\n"
+	"LC0:\tdb\t\"%d\",10,0\n"
 	"printint:\n"
-	"\tpushq\t%rbp\n"
-	"\tmovq\t%rsp, %rbp\n"
-	"\tsubq\t$16, %rsp\n"
-	"\tmovl\t%edi, -4(%rbp)\n"
-	"\tmovl\t-4(%rbp), %eax\n"
-	"\tmovl\t%eax, %esi\n"
-	"\tleaq	.LC0(%rip), %rdi\n"
-	"\tmovl	$0, %eax\n"
-	"\tcall	printf@PLT\n"
+	"\tpush\trbp\n"
+	"\tmov\trbp, rsp\n"
+	"\tsub\trsp, 16\n"
+	"\tmov\t[rbp-4], edi\n"
+	"\tmov\teax, [rbp-4]\n"
+	"\tmov\tesi, eax\n"
+	"\tlea	rdi, [rel LC0]\n"
+	"\tmov	eax, 0\n"
+	"\tcall	printf\n"
 	"\tnop\n"
 	"\tleave\n"
 	"\tret\n"
 	"\n"
-	"\t.globl\tmain\n"
-	"\t.type\tmain, @function\n"
 	"main:\n"
-	"\tpushq\t%rbp\n"
-	"\tmovq	%rsp, %rbp\n",
+	"\tpush\trbp\n"
+	"\tmov	rbp, rsp\n",
   Outfile);
 }
 
@@ -72,8 +71,8 @@ void cgpreamble()
 void cgpostamble()
 {
   fputs(
-	"\tmovl	$0, %eax\n"
-	"\tpopq	%rbp\n"
+	"\tmov	eax, 0\n"
+	"\tpop	rbp\n"
 	"\tret\n",
   Outfile);
 }
@@ -86,14 +85,14 @@ int cgload(int value) {
   int r= alloc_register();
 
   // Print out the code to initialise it
-  fprintf(Outfile, "\tmovq\t$%d, %s\n", value, reglist[r]);
+  fprintf(Outfile, "\tmov\t%s, %d\n", reglist[r], value);
   return(r);
 }
 
 // Add two registers together and return
 // the number of the register with the result
 int cgadd(int r1, int r2) {
-  fprintf(Outfile, "\taddq\t%s, %s\n", reglist[r1], reglist[r2]);
+  fprintf(Outfile, "\tadd\t%s, %s\n", reglist[r2], reglist[r1]);
   free_register(r1);
   return(r2);
 }
@@ -101,7 +100,7 @@ int cgadd(int r1, int r2) {
 // Subtract the second register from the first and
 // return the number of the register with the result
 int cgsub(int r1, int r2) {
-  fprintf(Outfile, "\tsubq\t%s, %s\n", reglist[r2], reglist[r1]);
+  fprintf(Outfile, "\tsub\t%s, %s\n", reglist[r1], reglist[r2]);
   free_register(r2);
   return(r1);
 }
@@ -109,7 +108,7 @@ int cgsub(int r1, int r2) {
 // Multiply two registers together and return
 // the number of the register with the result
 int cgmul(int r1, int r2) {
-  fprintf(Outfile, "\timulq\t%s, %s\n", reglist[r1], reglist[r2]);
+  fprintf(Outfile, "\timul\t%s, %s\n", reglist[r2], reglist[r1]);
   free_register(r1);
   return(r2);
 }
@@ -117,17 +116,17 @@ int cgmul(int r1, int r2) {
 // Divide the first register by the second and
 // return the number of the register with the result
 int cgdiv(int r1, int r2) {
-  fprintf(Outfile, "\tmovq\t%s,%%rax\n", reglist[r1]);
+  fprintf(Outfile, "\tmov\trax, %s\n", reglist[r1]);
   fprintf(Outfile, "\tcqo\n");
-  fprintf(Outfile, "\tidivq\t%s\n", reglist[r2]);
-  fprintf(Outfile, "\tmovq\t%%rax,%s\n", reglist[r1]);
+  fprintf(Outfile, "\tidiv\t%s\n", reglist[r2]);
+  fprintf(Outfile, "\tmov\t%s, rax\n", reglist[r1]);
   free_register(r2);
   return(r1);
 }
 
 // Call printint() with the given register
 void cgprintint(int r) {
-  fprintf(Outfile, "\tmovq\t%s, %%rdi\n", reglist[r]);
+  fprintf(Outfile, "\tmov\trdi, %s\n", reglist[r]);
   fprintf(Outfile, "\tcall\tprintint\n");
   free_register(r);
 }
